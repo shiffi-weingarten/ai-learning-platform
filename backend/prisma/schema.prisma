@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  prompts   Prompt[]
+
+  @@map("users")
+}
+
+model Category {
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  subCategories  SubCategory[]
+  prompts        Prompt[]
+
+  @@map("categories")
+}
+
+model SubCategory {
+  id         Int      @id @default(autoincrement())
+  name       String
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  prompts    Prompt[]
+
+  @@unique([name, categoryId])
+  @@map("sub_categories")
+}
+
+model Prompt {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  categoryId    Int
+  subCategoryId Int
+  prompt        String
+  response      String
+  createdAt     DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category      Category    @relation(fields: [categoryId], references: [id])
+  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
+
+  @@map("prompts")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
